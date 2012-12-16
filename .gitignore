@@ -1,0 +1,16 @@
+
+/impact/lib/impact/*
+/impact/weltmeister.html
+/impact/game.min.js
+/impact/lib/weltmeister/*
+/impact/tools/*
+/deploy/*
+
+/.idea/*
+Icon
+Thumbs.db
+.DS_Store
+
+*.swp
+*~
+*.iml
