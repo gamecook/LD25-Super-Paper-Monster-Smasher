@@ -30,19 +30,24 @@ MyGame = ig.Game.extend({
 	duration: 1,
 	strength: 3,
     tracking: null,
+    enterSFX: new ig.Sound("media/sounds/enter-level.*"),
+
 	init: function() {
+        ig.score = 0;
 	    // Initialize your game here; bind keys etc.
         this.tracking = new Tracking('UA-18884514-12');
 	    //ig.input.initMouse();
 	    ig.input.bind(ig.KEY.MOUSE1, "click");
 
 	    this.loadLevel(LevelDungeon);
+
+        ig.music.play("track2");
 	},
 	loadLevel: function(data)
 	{
 	    this.parent(data);
 	    this.player = this.getEntitiesByType(EntityMonster)[0];
-	    console.log(data);
+	    //console.log(data);
 	    var map = this.getMapByName("main");
 	    var tileSize = map.tilesize;
 	    this.screenBoundary = {
@@ -50,6 +55,7 @@ MyGame = ig.Game.extend({
 	    };
 
 	    this.displayCaption("Monster: You can't stop me!!!", 4);
+
 	},
 	update: function() {
 		// Update all entities and backgroundMaps
@@ -117,7 +123,7 @@ MyGame = ig.Game.extend({
 	    // left arrow
 		//this.arrow.drawTile(ig.system.width - 60 - arrowPadding, arrowCenter, 0, 60, 316, true);
 
-		this.font.draw(this.score.toString().pad(6, "0"), 10, 3);
+		this.font.draw(ig.score.toString().pad(6, "0"), 10, 3);
 
 
 		var totalSec = this.levelTime;
@@ -139,7 +145,7 @@ MyGame = ig.Game.extend({
 	    if (!ignoreShakeLock && this.quakeRunning) {
 	        return;
 	    }
-
+        this.enterSFX.play();
 	    this.quakeTimer.set(this.duration);
 	}
 });
@@ -147,6 +153,7 @@ MyGame = ig.Game.extend({
         // This is a simple template for the start screen. Replace the draw logic with your own artwork
         StartScreen = ig.Game.extend({
             splash: new ig.Image('media/splash.png'),
+            startSFX: new ig.Sound("media/sounds/start-game.*"),
             init:function ()
             {
                 // Call parent since I injected logic into the ig.Game class for key binding
@@ -168,12 +175,14 @@ MyGame = ig.Game.extend({
 
                 // By default track the new gaem screen as a page
                 this.tracking.trackPage("/game/new-game-screen");
+                ig.music.play("track1");
             },
             update:function ()
             {
                 if (ig.input.pressed('click'))
                 {
                     ig.system.setGame(MyGame);
+                    this.startSFX.play();
                 }
                 this.parent();
             },
@@ -200,8 +209,11 @@ MyGame = ig.Game.extend({
         GameOverScreen = ig.Game.extend({
             splash: new ig.Image('media/game-over.png'),
             captionFont: new ig.Font('media/nokia-36.font.png'),
+            selectSFX: new ig.Sound("media/sounds/selection.*"),
+            gameOverSFX: new ig.Sound("media/sounds/death-theme.*"),
             init:function ()
             {
+                ig.music.fadeOut(2);
 
                 ig.input.bind(ig.KEY.MOUSE1, "click")
 
@@ -219,12 +231,16 @@ MyGame = ig.Game.extend({
 
                 // By default track the new gaem screen as a page
                 this.tracking.trackPage("/game/game-over-screen");
+
+                this.gameOverSFX.play();
+
             },
             update:function ()
             {
                 if (ig.input.pressed('click'))
                 {
                     ig.system.setGame(StartScreen);
+                    this.selectSFX.play();
                 }
                 this.parent();
             },
@@ -237,17 +253,30 @@ MyGame = ig.Game.extend({
             drawScreen: function()
             {
                 this.splash.draw(0,0);
-                this.captionFont.draw("000000000", 67, 203, ig.Font.ALIGN.LEFT);
+                this.captionFont.draw(ig.score.toString().pad(6, "0"), 67, 203, ig.Font.ALIGN.LEFT);
                 //this.captionFont.draw("000000000", 67, 303, ig.Font.ALIGN.LEFT);
                 //
             }
 
         })
 
+
+
+        if (ig.ua.mobile) {
+            // Disable sound for all mobile devices
+            ig.Sound.enabled = false;
+        }
+
+
+
         // Start the Game with 60fps, a resolution of 320x240, scaled
     // up by a factor of 2
     ig.main('#canvas', StartScreen, 60, 800, 480, 1);
 
+        ig.music.add( new ig.Sound('media/sounds/heroic-theme.*'), "track1" );
+        ig.music.add( new ig.Sound('media/sounds/dungeon-looper.*'), "track2" );
+        ig.music.loop = true;
+        ig.music.volume = 0.2;
 
     // UTILS
     String.prototype.pad = function (l, s) {

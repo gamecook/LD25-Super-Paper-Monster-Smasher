@@ -8,7 +8,7 @@
 
     EntityMonster = ig.Entity.extend({
         animSheet: new ig.AnimationSheet('media/monster.png', 160, 240),
-        
+
         size: { x: 160, y: 240 },
         offset: { x: 0, y: 0 },
         type: ig.Entity.TYPE.A,
@@ -22,6 +22,7 @@
         health: 10,
         maxHealth: 10,
         bounciness: .2,
+        hitSFX: new ig.Sound('media/sounds/hurt1.*'),
         init: function (x, y, settings) {
             this.parent(x, y, settings);
             this.addAnim('idle', 1, [0]);
@@ -51,6 +52,11 @@
             if (res.collision.y && !this.standing) {
                 ig.game.shake(2, 4);
             }
+        },
+        receiveDamage: function(value, target)
+        {
+            this.parent(value, target);
+            this.hitSFX.play();
         },
         kill: function()
         {

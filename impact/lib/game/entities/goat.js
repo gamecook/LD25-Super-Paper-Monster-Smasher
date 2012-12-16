@@ -2,7 +2,8 @@
 	'game.entities.goat'
 )
 .requires(
-	'impact.entity'
+	'impact.entity',
+    'game.entities.knight'
 )
 .defines(function () {
 
@@ -12,6 +13,7 @@
         speed: 5,
         health: 1,
         attackDelay: 8,
+        bonusSFX: new ig.Sound('media/sounds/goat-powerup.*'),
         check: function (other) {
 
             if (other instanceof EntityMonster) {
@@ -19,11 +21,13 @@
                     other.health += 4;
                     if(other.health > other.maxHealth) other.health = other.maxHealth;
                     this.kill()
-                    ig.game.score += 10;
+                    ig.score += 10;
+                    this.bonusSFX.play();
                 }else {
                     this.kill();
                 }
             }
         }
+
     });
 });

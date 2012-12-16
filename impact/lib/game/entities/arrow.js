@@ -61,9 +61,12 @@ ig.module(
             damage: 3,
             bounciness:0.6,
             bounceCounter:0,
+            shootSFX: new ig.Sound('media/sounds/shot.*'),
+            bounceSFX: new ig.Sound('media/sounds/bounce.*'),
             init: function(x, y, settings)
             {
                 this.parent(x, y - 300, settings)
+                this.shootSFX.play();
 
             },
             handleMovementTrace:function (res)
@@ -77,6 +80,7 @@ ig.module(
             bounce:function ()
             {
                 this.bounceCounter++;
+                this.bounceSFX.play();
                 this.damage --;
                 if (this.bounceCounter > 3)
                 {

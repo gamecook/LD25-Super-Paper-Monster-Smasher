@@ -21,6 +21,7 @@
         bounciness: .3,
         health: 2,
         flip: false,
+        hitSFX: new ig.Sound('media/sounds/hurt2.*'),
         init: function (x, y, settings) {
             this.parent(x, y, settings);
             this.addAnim('idle', 1, [0]);
@@ -49,7 +50,7 @@
                 if (other.flip != this.flip){
                     this.receiveDamage(1, other);
                     this.vel.x += 200 * (this.flip ? -1 : 1);
-                ig.game.score ++;
+                ig.score ++;
              }else {
 
                 if (this.attackTimer.delta() > this.attackDelay) {
@@ -68,6 +69,11 @@
                 ig.game.spawnEntity(EntityBloodPuddle, this.pos.x, this.pos.y + this.size.y-20, {flip: this.flip});
                 ig.game.sortEntitiesDeferred();
             }
+        },
+        receiveDamage: function(value, target)
+        {
+            this.parent(value, target);
+            this.hitSFX.play();
         }
     });
 

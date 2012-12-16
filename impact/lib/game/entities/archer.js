@@ -16,6 +16,7 @@
         bounciness: .3,
         health: 2,
         flip: false,
+        shootFX: new ig.Sound('media/sounds/blip.*'),
         init: function (x, y, settings) {
             this.parent(x, y, settings);
         },
@@ -24,6 +25,7 @@
 
             if (this.attackTimer.delta() > this.attackDelay) {
                 this.attackTimer.reset();
+                this.shootFX.play();
                 var entity = ig.game.spawnEntity( EntityArrow, this.pos.x, this.pos.y, {flip:this.flip, parentEntity: this} );
             }
 
@@ -34,7 +36,7 @@
 
                 this.receiveDamage(1, other);
                 this.vel.x += 200 * (this.flip ? -1 : 1);
-                ig.game.score ++;
+                ig.score ++;
 
             }
         }
