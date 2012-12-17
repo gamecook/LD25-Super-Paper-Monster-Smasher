@@ -25,10 +25,18 @@
         hitSFX: new ig.Sound('media/sounds/hurt1.*'),
         init: function (x, y, settings) {
             this.parent(x, y, settings);
-            this.addAnim('idle', 1, [0]);
+            this.addAnim('idle',.3, [0, 1, 2, 1]);
             this.currentAnim.flip.x = this.flip;
 
             //console.log("New Knight", this.zIndex);
+        },
+        update: function()
+        {
+            this.parent();
+            if(this.vel.x != 0)
+                this.offset.y = Math.random().map(0, 1, 0, 2);
+            else
+                this.offset.y = 0;
         },
         move: function (value) {
             if (!this.standing)

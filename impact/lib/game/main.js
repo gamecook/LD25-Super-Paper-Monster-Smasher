@@ -10,7 +10,9 @@ ig.module(
     'game.entities.death-explosion',
     'game.plugins.caption',
     'game.entities.goat',
-    'game.plugins.tracking'
+    'game.plugins.tracking',
+    'plugins.impact-storage',
+    'game.plugins.pause'
 )
 .defines(function(){
 
@@ -20,11 +22,12 @@ MyGame = ig.Game.extend({
     font: new ig.Font('media/nokia-56.font.png'),
     arrow: new ig.Image('media/arrows.png'),
     lifeBar: new ig.Image('media/life-bar.png'),
+    pauseButton: new ig.Image('media/pause.png'),
 	player: null,
 	screenBoundary: null,
 	gravity: 300,
 	score: 0,
-	gameTimer: new ig.Timer(),
+	levelTimer: new ig.Timer(),
 	levelTime: 0,
 	quakeTimer: new ig.Timer(),
 	duration: 1,
@@ -47,7 +50,6 @@ MyGame = ig.Game.extend({
 	{
 	    this.parent(data);
 	    this.player = this.getEntitiesByType(EntityMonster)[0];
-	    //console.log(data);
 	    var map = this.getMapByName("main");
 	    var tileSize = map.tilesize;
 	    this.screenBoundary = {
@@ -72,22 +74,29 @@ MyGame = ig.Game.extend({
 		        this.screen.x = this.screenBoundary.max;
 
 		    ig.game.screen.y = 0;
-		    //console.log("screen x", this.screen.x, this.screenBoundary.max);
 		}
 
 		if (ig.input.pressed('click')) {
-		    var direction = (ig.input.mouse.x > ig.system.width / 2) ? true : false;
 
-		    if(direction)
-		        this.player.move("right");
+            if(ig.input.mouse.y < 80)
+            {
+                this.togglePause();
+            }
             else
-		        this.player.move("left");
+            {
+                var direction = (ig.input.mouse.x > ig.system.width / 2) ? true : false;
+
+                if(direction)
+                    this.player.move("right");
+                else
+                    this.player.move("left");
+            }
 		}
 
 	    // Add your own, additional update code here
 
-		if (this.gameTimer.delta() > 1) {
-		    this.gameTimer.reset();
+		if (this.levelTimer.delta() > 1) {
+		    this.levelTimer.reset();
 		    this.levelTime++;
 		}
 
@@ -105,7 +114,17 @@ MyGame = ig.Game.extend({
 		    this.quakeRunning = false;
 		}
 	},
-	
+    onPause:function ()
+    {
+        this.parent();
+        this.levelTimer.pause();
+        //this.hideCaption();
+    },
+    onResume:function()
+    {
+        this.parent();
+        this.levelTimer.unpause();
+    },
 	draw: function() {
 		// Draw all entities and backgroundMaps
 		this.parent();
@@ -137,6 +156,8 @@ MyGame = ig.Game.extend({
 		var health = this.player ? 8 - Math.floor((this.player.health/this.player.maxHealth) * 8) : 8;
 
 		this.lifeBar.drawTile(616, 71, health, 160, 20);
+
+        this.pauseButton.drawTile(360, 8, (this.paused ? 1 : 0),78, 56 );
 	},
 	shake: function (duration, strength, ignoreShakeLock) {
 	    this.duration = duration ? duration : 1;
@@ -152,10 +173,13 @@ MyGame = ig.Game.extend({
 
         // This is a simple template for the start screen. Replace the draw logic with your own artwork
         StartScreen = ig.Game.extend({
+            clickDelay: 2,
+            delayTimer: new ig.Timer(),
             splash: new ig.Image('media/splash.png'),
             startSFX: new ig.Sound("media/sounds/start-game.*"),
             init:function ()
             {
+                this.delayTimer.reset();
                 // Call parent since I injected logic into the ig.Game class for key binding
                 //this.parent();
 
@@ -179,7 +203,7 @@ MyGame = ig.Game.extend({
             },
             update:function ()
             {
-                if (ig.input.pressed('click'))
+                if (ig.input.pressed('click') && (this.delayTimer.delta() > this.clickDelay))
                 {
                     ig.system.setGame(MyGame);
                     this.startSFX.play();
@@ -207,14 +231,17 @@ MyGame = ig.Game.extend({
 
         // This is a simple template for the start screen. Replace the draw logic with your own artwork
         GameOverScreen = ig.Game.extend({
+            clickDelay: 10,
+            delayTimer: new ig.Timer(),
             splash: new ig.Image('media/game-over.png'),
             captionFont: new ig.Font('media/nokia-36.font.png'),
             selectSFX: new ig.Sound("media/sounds/selection.*"),
             gameOverSFX: new ig.Sound("media/sounds/death-theme.*"),
+            hiScore: 0,
             init:function ()
             {
                 ig.music.fadeOut(2);
-
+                this.delayTimer.reset();
                 ig.input.bind(ig.KEY.MOUSE1, "click")
 
                 // Create tracking
@@ -234,10 +261,22 @@ MyGame = ig.Game.extend({
 
                 this.gameOverSFX.play();
 
+
+
+                var storage = new ig.Storage();
+
+                // Initialize high score as 0 if 'highScore' does not exist
+                storage.initUnset('highScore', 0);
+
+                if(ig.score > storage.get('highScore'))
+                storage.setHighest('highScore',ig.score);
+
+                this.highScore = storage.getInt("highScore");
+
             },
             update:function ()
             {
-                if (ig.input.pressed('click'))
+                if (ig.input.pressed('click') && (this.delayTimer.delta() > this.clickDelay))
                 {
                     ig.system.setGame(StartScreen);
                     this.selectSFX.play();
@@ -253,8 +292,10 @@ MyGame = ig.Game.extend({
             drawScreen: function()
             {
                 this.splash.draw(0,0);
-                this.captionFont.draw(ig.score.toString().pad(6, "0"), 67, 203, ig.Font.ALIGN.LEFT);
-                //this.captionFont.draw("000000000", 67, 303, ig.Font.ALIGN.LEFT);
+                if(ig.score)
+                    this.captionFont.draw(ig.score.toString().pad(6, "0"), 67, 203, ig.Font.ALIGN.LEFT);
+
+                    this.captionFont.draw(this.highScore.toString().pad(6, "0"), 67, 303, ig.Font.ALIGN.LEFT);
                 //
             }
 

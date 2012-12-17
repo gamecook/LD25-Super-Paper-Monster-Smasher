@@ -41,13 +41,12 @@
             colorOffset: 0,
             totalColors: 7,
             baseVelocity: { x: 4, y: 20 },
-            zIndex: 200,
+            /*zIndex: 200,*/
             bounciness: .3,
-            animSheet: null,
+            animSheet: animSheet = new ig.AnimationSheet('media/blood-particle.png', 20, 20),
             init: function (x, y, settings) {
                 this.parent(x, y, settings);
                 var dir = settings.flip ? 1 : -1;
-                this.animSheet = new ig.AnimationSheet('media/blood-particle.png', this.size.x, this.size.y)
                 var frameID = Math.round(Math.random() * this.totalColors) + (this.colorOffset * (this.totalColors + 1));
                 this.addAnim('idle', 1, [frameID]);
                 this.vel.x = dir * (Math.random() * this.baseVelocity.x - 1) * this.vel.x;
@@ -67,18 +66,23 @@
             }
         });
 
+        EntityDeathExplosionSmallParticle = EntityDeathExplosionParticle.extend({
+            size: { x: 5, y: 5 },
+            animSheet: animSheet = new ig.AnimationSheet('media/particles.png', 5, 5),
+        })
+
         ig.Entity.inject({
             bloodColorOffset: 0,
+            bloodEntity: "EntityDeathExplosionParticle",
             spawnParticles: function (total) {
                 for (var i = 0; i < total; i++)
-                    ig.game.spawnEntity(EntityDeathExplosionParticle, this.pos.x + (this.flip ? this.size.x : 0), this.pos.y + (this.size.y * .2), { flip: this.flip });
+                    ig.game.spawnEntity(this.bloodEntity, this.pos.x + (this.flip ? this.size.x : 0), this.pos.y + (this.size.y * .2), { flip: this.flip });
             },
             receiveDamage: function (amount, from) {
                 this.parent(amount, from);
 
                 if (this.health > 0) {
                     this.spawnParticles(2);
-                    //console.log("spawn particles");
                 }
             }
         })

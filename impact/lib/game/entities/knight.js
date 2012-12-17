@@ -21,6 +21,7 @@
         bounciness: .3,
         health: 2,
         flip: false,
+        bloodEntity: "EntityDeathExplosionSmallParticle",
         hitSFX: new ig.Sound('media/sounds/hurt2.*'),
         init: function (x, y, settings) {
             this.parent(x, y, settings);
@@ -33,6 +34,7 @@
             var xdir = this.flip ? -1 : 1;
             this.vel.x += this.speed * xdir;
 
+            this.offset.y = Math.random().map(0, 1, -1, 1);
         },
 
         handleMovementTrace: function (res) {
